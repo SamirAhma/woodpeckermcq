@@ -1,5 +1,8 @@
 import { prisma } from "./prisma";
 
+// Helper to safely serialize dates
+const serializeDate = (date: Date): string => date.toISOString();
+
 export async function getAnalytics(setId: string) {
     // Get all sessions for this set with rounds and attempts
     const sessions = await prisma.studySession.findMany({
@@ -51,7 +54,7 @@ export async function getAnalytics(setId: string) {
                 )
                 : null,
             targetTime: round.targetTime,
-            createdAt: round.startTime,
+            createdAt: serializeDate(round.startTime),
         }))
     );
 
@@ -108,10 +111,10 @@ export async function getAnalytics(setId: string) {
 
             // Estimate time spent on this pattern from attempts
             const patternAttempts = sessions.flatMap(s =>
-                s.attempts.filter(a => a.questionId === q.questionId && a.timeTaken !== null)
+                s.attempts.filter(a => a.questionId === q.questionId && (a as any).timeTaken !== null)
             );
             const avgTime = patternAttempts.length > 0
-                ? patternAttempts.reduce((sum, a) => sum + (a.timeTaken || 0), 0) / patternAttempts.length
+                ? patternAttempts.reduce((sum, a) => sum + ((a as any).timeTaken || 0), 0) / patternAttempts.length
                 : 0;
 
             acc[tag].totalTime += avgTime;
@@ -150,7 +153,7 @@ export async function getAnalytics(setId: string) {
 
         return {
             id: session.id,
-            createdAt: session.createdAt.toISOString(),
+            createdAt: serializeDate(session.createdAt),
             targetRounds: session.targetRounds,
             currentRound: session.currentRound,
             rounds: sessionRounds,
