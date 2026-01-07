@@ -1,0 +1,74 @@
+[
+    {
+        "question": "What data structure is commonly used to solve Two Sum in O(N)?",
+        "options": [
+            "Stack",
+            "Queue",
+            "Hash Map",
+            "Heap"
+        ],
+        "answer": "Hash Map",
+        "explanation": "A hash map stores seen values for constant-time lookup.",
+        "pattern_tag": "Lookup Table"
+    },
+    {
+        "question": "What is the optimal time complexity of Two Sum using a hash map?",
+        "options": [
+            "O(N^2)",
+            "O(N log N)",
+            "O(N)",
+            "O(1)"
+        ],
+        "answer": "O(N)",
+        "explanation": "Each element is processed once with constant-time lookups.",
+        "pattern_tag": "Lookup Table"
+    },
+    {
+        "question": "Why does sorting break the original index requirement in Two Sum?",
+        "options": [
+            "Sorting is unstable",
+            "Sorting changes indices",
+            "Sorting increases space",
+            "Sorting removes duplicates"
+        ],
+        "answer": "Sorting changes indices",
+        "explanation": "Indices no longer match original positions.",
+        "pattern_tag": "Lookup Table"
+    },
+    {
+        "question": "What is stored as the hash map key in Two Sum?",
+        "options": [
+            "Index",
+            "Target",
+            "Array length",
+            "Value"
+        ],
+        "answer": "Value",
+        "explanation": "Values are mapped to their indices.",
+        "pattern_tag": "Lookup Table"
+    },
+    {
+        "question": "When should you check the complement in Two Sum?",
+        "options": [
+            "After loop",
+            "Before inserting",
+            "At the end",
+            "After sorting"
+        ],
+        "answer": "Before inserting",
+        "explanation": "Prevents using the same element twice.",
+        "pattern_tag": "Lookup Table"
+    },
+    {
+        "question": "What happens if Two Sum has no solution?",
+        "options": [
+            "Return -1",
+            "Throw error",
+            "Return empty",
+            "Depends on problem"
+        ],
+        "answer": "Depends on problem",
+        "explanation": "Problem statement defines expected behavior.",
+        "pattern_tag": "Lookup Table"
+    }
+]

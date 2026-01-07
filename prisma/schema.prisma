@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MCQSet {
+  id           String         @id @default(cuid())
+  title        String
+  targetRounds Int            @default(7)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  questions    Question[]
+  sessions     StudySession[]
+}
+
+model Question {
+  id          String     @id @default(cuid())
+  setId       String
+  question    String
+  options     String[]
+  answer      String
+  explanation String?
+  patternTag  String?
+  set         MCQSet     @relation(fields: [setId], references: [id], onDelete: Cascade)
+  attempts    Attempt[]
+}
+
+model StudySession {
+  id           String   @id @default(cuid())
+  setId        String
+  currentRound Int      @default(1)
+  targetRounds Int      @default(7)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  set          MCQSet   @relation(fields: [setId], references: [id], onDelete: Cascade)
+  rounds       Round[]
+  attempts     Attempt[]
+}
+
+model Round {
+  id             String       @id @default(cuid())
+  sessionId      String
+  roundNumber    Int
+  score          Int
+  totalQuestions Int
+  startTime      DateTime     @default(now())
+  endTime        DateTime?
+  targetTime     Int?         // in seconds
+  session        StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Attempt {
+  id          String       @id @default(cuid())
+  sessionId   String
+  questionId  String
+  roundNumber Int
+  isCorrect   Boolean
+  timeTaken   Float?       // in seconds
+  createdAt   DateTime     @default(now())
+  session     StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question    Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
