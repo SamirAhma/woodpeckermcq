@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AnalyticsResponseSchema, AnalyticsResponse } from "@/lib/schemas";
+import { getAnalytics } from "@/lib/analytics";
 
 export default async function AnalyticsPage({
     params,
@@ -10,26 +11,19 @@ export default async function AnalyticsPage({
 }) {
     const { id } = await params;
 
-    // Fetch analytics data
-    const apiResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/analytics/${id}`,
-        { cache: "no-store" }
-    );
+    const rawData = await getAnalytics(id);
 
-    if (!apiResponse.ok) {
+    if (!rawData) {
         notFound();
     }
 
-    const rawData = await apiResponse.json();
     const result = AnalyticsResponseSchema.safeParse(rawData);
 
     if (!result.success) {
         console.error("Analytics validation error:", result.error);
-        // We could show an error UI here, but for now fallback to raw data with cast if needed
-        // or just throw to let Next.js handle it
     }
 
-    const data: AnalyticsResponse = result.success ? result.data : rawData as AnalyticsResponse;
+    const data: AnalyticsResponse = result.success ? result.data : rawData as any;
 
     return (
         <main className="min-h-screen p-8 max-w-6xl mx-auto">
