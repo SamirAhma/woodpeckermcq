@@ -77,6 +77,9 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         if (!session) {
             startNewSession();
         } else {
+            // TEMPORARILY DISABLED - Rest period check causing issues
+            // TODO: Re-enable after fixing session API
+            /*
             // Check for resting state first - ONLY if last round was PASSED
             const rounds = session.rounds || [];
             let inRest = false;
@@ -109,6 +112,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
             }
 
             if (inRest) return;
+            */
 
             // HYDRATION LOGIC
             const activeState = (session as any).activeState;
