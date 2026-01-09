@@ -116,22 +116,38 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
 
     const nextQuestion = () => {
         setQuestionStartTime(Date.now()); // Reset start time for the next question
+        let newIndex = currentIndex;
+        let newQueue = questionQueue;
+
         if (currentIndex + 1 < questionQueue.length) {
-            setCurrentIndex(currentIndex + 1);
+            newIndex = currentIndex + 1;
+            setCurrentIndex(newIndex);
             setShowFeedback(false);
             setSelectedOption(null);
         } else if (incorrectIds.size > 0) {
             // Retry incorrect questions
             const incorrectQuestions = questionQueue.filter(q => incorrectIds.has(q.id));
-            const shuffled = shuffleArray(incorrectQuestions);
-            setQuestionQueue(shuffled);
-            setCurrentIndex(0);
+            newQueue = shuffleArray(incorrectQuestions);
+            newIndex = 0;
+            setQuestionQueue(newQueue);
+            setCurrentIndex(newIndex);
             setShowFeedback(false);
             setSelectedOption(null);
         } else {
             // Round complete
             return true;
         }
+
+        // Persist the new index/queue immediately
+        onSaveProgress({
+            index: newIndex,
+            score,
+            incorrectIds: Array.from(incorrectIds),
+            queue: newQueue.map(q => q.id),
+            attempts,
+            startTime: new Date().toISOString()
+        });
+
         return false;
     };
 
