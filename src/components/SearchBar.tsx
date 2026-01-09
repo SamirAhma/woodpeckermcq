@@ -12,7 +12,7 @@ export default function SearchBar() {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            const params = new URLSearchParams(searchParams.toString());
+            const params = new URLSearchParams(window.location.search);
             if (text) {
                 params.set("q", text);
             } else {
@@ -24,8 +24,8 @@ export default function SearchBar() {
         }, WOODPECKER_CONFIG.AUTO_ADVANCE_DELAY_MS);
 
         return () => clearTimeout(timeoutId);
-    }, [text, router, searchParams]); // Warning: searchParams dependency might cause loops if not careful, but toString() creates new instance.
-    // Ideally we only depend on text, but we need current params to preserve other filters if any.
+    }, [text, router]); // Removed searchParams dependency to prevent infinite loop
+
 
     return (
         <div className="relative w-full max-w-md hidden md:block">
