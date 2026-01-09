@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DownloadSetButton from "./DownloadSetButton";
+import AddQuestionsModal from "./AddQuestionsModal";
 
 interface SetCardProps {
     set: {
@@ -19,6 +20,7 @@ interface SetCardProps {
 export default function SetCard({ set }: SetCardProps) {
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this set? This action cannot be undone.")) return;
@@ -77,10 +79,26 @@ export default function SetCard({ set }: SetCardProps) {
                     {isDeleting ? "..." : "Delete Set"}
                 </button>
 
-                <div className="col-span-2 pt-2 border-t border-slate-100">
+                <div className="col-span-2 pt-2 border-t border-slate-100 flex gap-2">
                     <DownloadSetButton setId={set.id} title={set.title} />
+
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center justify-center p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors gap-2 group flex-1"
+                        title="Add more questions"
+                    >
+                        <span className="text-xl leading-none font-bold">+</span>
+                        <span className="text-xs font-bold uppercase tracking-wider">Add Qs</span>
+                    </button>
                 </div>
             </div>
+
+            <AddQuestionsModal
+                setId={set.id}
+                setTitle={set.title}
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+            />
         </div>
     );
 }
