@@ -7,6 +7,8 @@
  * - CSV-style layout for uniform arrays (headers + rows)
  */
 
+import { WOODPECKER_CONFIG } from "@/lib/config";
+
 export function parseTOON(input: string): any {
     const lines = input.trim().split(/\r?\n/);
     if (lines.length === 0) return {};
@@ -159,7 +161,7 @@ function transformToMCQSet(sections: any): any {
 
     return {
         title: context.topic ? context.topic.replace(/_/g, ' ') : "Untitled Set",
-        targetRounds: 7, // Default
+        targetRounds: WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS,
         questions: questions
     };
 }

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { MCQSetUploadSchema, MCQSetArraySchema } from "@/lib/schemas";
-
 import { parseTOON } from "@/lib/toon";
+import { MCQSetUploadSchema, MCQSetArraySchema } from "@/lib/schemas";
+import { WOODPECKER_CONFIG } from "@/lib/config";
 
 export async function POST(req: NextRequest) {
     try {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         const newSet = await prisma.mCQSet.create({
             data: {
                 title: title,
-                targetRounds: structuredResult.success ? (structuredResult.data.targetRounds || 7) : 7,
+                targetRounds: structuredResult.success ? (structuredResult.data.targetRounds || WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS) : WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS,
                 questions: {
                     create: questions.map((q) => ({
                         question: q.question,

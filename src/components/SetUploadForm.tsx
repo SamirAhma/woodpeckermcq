@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { WOODPECKER_CONFIG } from "@/lib/config";
 
 interface SetUploadFormProps {
     onSuccess?: () => void;
@@ -9,7 +10,7 @@ interface SetUploadFormProps {
 
 export default function SetUploadForm({ onSuccess }: SetUploadFormProps) {
     const [title, setTitle] = useState("");
-    const [targetRounds, setTargetRounds] = useState(7);
+    const [targetRounds, setTargetRounds] = useState<number>(WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS);
     const [input, setInput] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -68,7 +69,7 @@ export default function SetUploadForm({ onSuccess }: SetUploadFormProps) {
 
             setInput("");
             setTitle("");
-            setTargetRounds(7);
+            setTargetRounds(WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS);
             router.refresh();
             alert("Set created successfully!");
             if (onSuccess) onSuccess();

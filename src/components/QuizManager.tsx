@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { MCQSet, Question, StudySession, Round } from "@prisma/client";
+import { WOODPECKER_CONFIG } from "@/lib/config";
 
 type SetWithQuestions = MCQSet & { questions: Question[] };
 type SessionWithRounds = StudySession & { rounds: Round[] };
@@ -23,7 +24,7 @@ function shuffleArray<T>(array: T[]): T[] {
     return shuffled;
 }
 
-export default function QuizManager({ set, initialSession, targetRounds = 7 }: Props) {
+export default function QuizManager({ set, initialSession, targetRounds = WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS }: Props) {
     const [session, setSession] = useState<SessionWithRounds | undefined>(initialSession);
     const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -84,7 +85,7 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
                 const lastRound = rounds[rounds.length - 1];
                 const lastRoundEndTime = new Date(lastRound.endTime!).getTime();
                 const now = Date.now();
-                const restPeriod = 24 * 60 * 60 * 1000; // 24 hours
+                const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
                 const timePassed = now - lastRoundEndTime;
 
                 if (timePassed < restPeriod) {
@@ -132,7 +133,7 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
                 const prevDuration = Math.round(
                     (new Date(lastRound.endTime!).getTime() - new Date(lastRound.startTime).getTime()) / 1000
                 );
-                const newTarget = Math.max(Math.floor(prevDuration / 2), 1);
+                const newTarget = Math.max(Math.floor(prevDuration / WOODPECKER_CONFIG.TARGET_TIME_HALVING_FACTOR), WOODPECKER_CONFIG.MIN_TARGET_TIME_SECONDS);
                 setTargetTime(newTarget);
                 // Only set timeLeft if not hydrated or if hydrated timeLeft logic is added (skipped for brevity, assuming minimal drift)
                 if (!activeState) setTimeLeft(newTarget);
@@ -238,7 +239,7 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
         if (showFeedback && selectedOption === questionQueue[currentIndex]?.answer) {
             const timer = setTimeout(() => {
                 nextQuestion();
-            }, 300);
+            }, WOODPECKER_CONFIG.AUTO_ADVANCE_DELAY_MS);
             return () => clearTimeout(timer);
         }
     }, [showFeedback, selectedOption]);
@@ -417,7 +418,7 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
         const isPerfectAccuracy = score === set.questions.length;
         const beatTargetTime = targetTime === null || timeTaken <= targetTime;
         const passed = isPerfectAccuracy && beatTargetTime;
-        const nextTarget = Math.max(Math.floor(timeTaken / 2), 1);
+        const nextTarget = Math.max(Math.floor(timeTaken / WOODPECKER_CONFIG.TARGET_TIME_HALVING_FACTOR), WOODPECKER_CONFIG.MIN_TARGET_TIME_SECONDS);
         const isComplete = currentRound >= totalRounds;
 
         return (
@@ -570,8 +571,8 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
 
                 <div className="flex flex-col items-end gap-1">
                     <div className="flex items-center gap-3">
-                        <div className={`text-sm font-mono font-bold px-2 py-1 rounded ${questionDuration < 2 ? "text-green-500 bg-green-500/10" :
-                            questionDuration < 5 ? "text-yellow-500 bg-yellow-500/10" :
+                        <div className={`text-sm font-mono font-bold px-2 py-1 rounded ${questionDuration < WOODPECKER_CONFIG.QUESTION_TIME_FAST_THRESHOLD ? "text-green-500 bg-green-500/10" :
+                            questionDuration < WOODPECKER_CONFIG.QUESTION_TIME_MEDIUM_THRESHOLD ? "text-yellow-500 bg-yellow-500/10" :
                                 "text-red-500 bg-red-500/10"
                             }`}>
                             {questionDuration.toFixed(1)}s

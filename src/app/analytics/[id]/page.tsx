@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AnalyticsResponseSchema, AnalyticsResponse } from "@/lib/schemas";
 import { getAnalytics } from "@/lib/analytics";
 import Navbar from "@/components/Navbar";
+import { WOODPECKER_CONFIG } from "@/lib/config";
 
 export default async function AnalyticsPage({
     params,
@@ -133,7 +134,7 @@ export default async function AnalyticsPage({
                                     </li>
                                     <li className="flex gap-3">
                                         <span className="text-blue-500 font-bold">ℹ</span>
-                                        <p>Typical "Woodpecker Mastery" is reached when your final round time is under <strong>5 seconds</strong> with zero errors.</p>
+                                        <p>Typical "Woodpecker Mastery" is reached when your final round time is under <strong>{WOODPECKER_CONFIG.MASTERY_TARGET_TIME_SECONDS} seconds</strong> with zero errors.</p>
                                     </li>
                                 </ul>
                             </div>
@@ -146,7 +147,7 @@ export default async function AnalyticsPage({
                     <section className="mb-8 bg-card p-6 rounded-xl border shadow-sm">
                         <h2 className="text-xl font-semibold mb-4">Convergence Chart (Intuition Building)</h2>
                         <p className="text-sm text-muted-foreground mb-6">
-                            As you reach Cycle 7, Mean and Median times should converge at a low number (3-5s).
+                            As you reach Cycle {WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS}, Mean and Median times should converge at a low number ({WOODPECKER_CONFIG.MASTERY_TARGET_TIME_SECONDS}s or less).
                         </p>
                         <div className="space-y-6">
                             {data.convergenceData.map((stat: any) => (
@@ -198,7 +199,7 @@ export default async function AnalyticsPage({
                                         <p className="text-xs text-muted-foreground">{stat.avgAccuracy}% Accuracy • {stat.totalAttempts} Attempts</p>
                                     </div>
                                     <div className="text-right">
-                                        <span className={`text-lg font-black ${stat.avgTime > 10 ? 'text-red-500' : 'text-primary'}`}>
+                                        <span className={`text-lg font-black ${stat.avgTime > WOODPECKER_CONFIG.KNOWLEDGE_GAP_TIME_THRESHOLD ? 'text-red-500' : 'text-primary'}`}>
                                             {stat.avgTime}s
                                         </span>
                                         <p className="text-[10px] font-bold text-muted-foreground uppercase">Avg Time</p>

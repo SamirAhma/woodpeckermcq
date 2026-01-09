@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { WOODPECKER_CONFIG } from "@/lib/config";
 import { useEffect, useState, useTransition } from "react";
 
 export default function SearchBar() {
@@ -20,7 +21,7 @@ export default function SearchBar() {
             startTransition(() => {
                 router.replace(`/?${params.toString()}`);
             });
-        }, 300);
+        }, WOODPECKER_CONFIG.AUTO_ADVANCE_DELAY_MS);
 
         return () => clearTimeout(timeoutId);
     }, [text, router, searchParams]); // Warning: searchParams dependency might cause loops if not careful, but toString() creates new instance.
