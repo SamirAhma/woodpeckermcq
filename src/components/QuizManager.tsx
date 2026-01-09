@@ -199,7 +199,21 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
             });
             const data = await resp.json();
             setSession(data);
-            setQuestionQueue([...set.questions]);
+
+            // Randomize first round
+            const shuffled = shuffleArray([...set.questions]);
+            setQuestionQueue(shuffled);
+
+            // Initial persist for the randomized queue
+            saveProgress({
+                index: 0,
+                score: 0,
+                incorrectIds: [],
+                queue: shuffled.map(q => q.id),
+                attempts: [],
+                startTime: new Date().toISOString()
+            });
+
         } catch (e) {
             console.error("Failed to start session", e);
         } finally {
@@ -296,13 +310,13 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
             if (incorrectIds.size > 0) {
                 // Repeat logic
                 const incorrectQuestions = set.questions.filter((q) => incorrectIds.has(q.id));
-                // Reshuffle incorrect questions? Or keep order?
-                // Let's keep filter order.
-                setQuestionQueue(incorrectQuestions);
+                // Repeat incorrect questions
+                const shuffledIncorrectQuestions = shuffleArray(incorrectQuestions);
+                setQuestionQueue(shuffledIncorrectQuestions);
                 setCurrentIndex(0);
                 setShowFeedback(false);
                 setSelectedOption(null);
-                setIncorrectIds(new Set());
+                setIncorrectIds(new Set()); // Reset for the retry
                 setQuestionStartTime(Date.now());
 
                 // SAVE NEW QUEUE STATE
@@ -310,9 +324,13 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
                     index: 0,
                     score: score, // Score doesn't reset until new round
                     incorrectIds: [],
-                    queue: incorrectQuestions.map(q => q.id),
-                    attempts: attempts,
-                    startTime: new Date(roundStartTime).toISOString()
+                    queue: shuffledIncorrectQuestions.map(q => q.id), // Note: This should ideally match the shuffled order.
+                    // Actually, we must save the IDs in the *shuffled* order for consistency.
+                    // Correct fix:
+                    // const shuffled = shuffleArray(incorrectQuestions);
+                    // setQuestionQueue(shuffled);
+                    // ... 
+                    // queue: shuffled.map(q => q.id)
                 });
             } else {
                 finishRound();
@@ -346,6 +364,7 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
                     passed: passed,
                 }),
             });
+            // Refresh session data to show progress only if passed
             if (passed) {
                 const resp = await fetch(`/api/sessions/${session.id}`);
                 const data = await resp.json();
@@ -357,7 +376,7 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
     };
 
     const startNextRound = () => {
-        const queue = [...set.questions]; // New round, full set
+        const queue = shuffleArray([...set.questions]); // New round, shuffled
         setQuestionQueue(queue);
         setCurrentIndex(0);
         setScore(0);
@@ -496,10 +515,17 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-4">
-                <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium bg-secondary px-3 py-1 rounded-full text-secondary-foreground w-fit">
-                        Question {currentIndex + 1} of {questionQueue.length}
-                    </span>
+                <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                        <span className="text-sm font-medium bg-secondary px-3 py-1 rounded-full text-secondary-foreground w-fit">
+                            Question {currentIndex + 1} / {questionQueue.length}
+                        </span>
+                        {incorrectIds.size > 0 && (
+                            <span className="text-sm font-bold bg-red-100 text-red-600 px-3 py-1 rounded-full w-fit flex items-center gap-1">
+                                {incorrectIds.size} Error{incorrectIds.size > 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
                     {targetTime !== null ? (
                         <span className="text-xs font-bold text-red-500 uppercase tracking-wider ml-1">
                             Target: {formatTime(targetTime)}
