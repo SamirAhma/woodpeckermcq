@@ -8,11 +8,11 @@ export const WOODPECKER_CONFIG = {
     DEFAULT_TARGET_ROUNDS: 7,
 
     // Timing Configuration (in milliseconds)
-    REST_PERIOD_MS: 24 * 60 * 60 * 1000, // 24 hours
+    REST_PERIOD_MS: 96 * 60 * 60 * 1000, // 24 hours
     AUTO_ADVANCE_DELAY_MS: 300, // 300ms delay after correct answer
 
     // Timing Configuration (in seconds)
-    REST_PERIOD_SECONDS: 24 * 60 * 60, // 24 hours in seconds
+    REST_PERIOD_SECONDS: 96 * 60 * 60, // 24 hours in seconds
 
     // Target Time Configuration
     MIN_TARGET_TIME_SECONDS: 1, // Minimum target time for a round
