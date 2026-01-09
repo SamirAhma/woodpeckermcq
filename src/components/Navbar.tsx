@@ -33,9 +33,9 @@ export default function Navbar() {
                         <div className="flex items-center gap-3 flex-shrink-0">
                             <Link
                                 href="/"
-                                className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-primary transition-colors"
+                                className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-primary transition-colors"
                             >
-                                🏠 Home
+                                🏠 <span className="hidden sm:inline">Home</span>
                             </Link>
 
                             <button
