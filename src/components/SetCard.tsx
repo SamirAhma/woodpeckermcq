@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import DownloadSetButton from "./DownloadSetButton";
 
 interface SetCardProps {
     set: {
@@ -31,6 +32,7 @@ export default function SetCard({ set }: SetCardProps) {
                 </p>
             </div>
             <div className="flex items-center gap-2">
+                <DownloadSetButton setId={set.id} title={set.title} />
                 <button
                     onClick={() => router.push(`/analytics/${set.id}`)}
                     className="px-3 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80"

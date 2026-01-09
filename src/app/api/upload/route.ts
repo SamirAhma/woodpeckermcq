@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { MCQSetUploadSchema, MCQSetArraySchema } from "@/lib/schemas";
 
+import { parseTOON } from "@/lib/toon";
+
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json();
+        let body;
+        const contentType = req.headers.get("content-type");
+
+        if (contentType?.includes("text/plain")) {
+            const text = await req.text();
+            body = parseTOON(text);
+        } else {
+            body = await req.json();
+        }
 
         // Try to validate as a structured object first, then as a direct array
         let title = "Untitled Set";
@@ -51,6 +62,7 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        revalidatePath("/");
         return NextResponse.json(newSet, { status: 201 });
     } catch (error: any) {
         console.error("Upload error:", error);
