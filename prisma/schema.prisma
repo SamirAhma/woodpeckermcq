@@ -42,6 +42,7 @@ model StudySession {
   targetRounds Int      @default(7)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  activeState  Json?    // Stores { index, score, queue, incorrectIds, attempts, startTime }
   set          MCQSet   @relation(fields: [setId], references: [id], onDelete: Cascade)
   rounds       Round[]
   attempts     Attempt[]
