@@ -77,21 +77,34 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         if (!session) {
             startNewSession();
         } else {
-            // Check for resting state first
+            // Check for resting state first - ONLY if last round was PASSED
             const rounds = session.rounds || [];
             let inRest = false;
 
             if (rounds.length > 0) {
                 const lastRound = rounds[rounds.length - 1];
-                const lastRoundEndTime = new Date(lastRound.endTime!).getTime();
-                const now = Date.now();
-                const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
-                const timePassed = now - lastRoundEndTime;
+                // Only enforce rest period if the last round was passed
+                // A round is passed if: perfect accuracy AND (no target time OR beat target time)
+                if (lastRound.endTime) {
+                    const isPerfectAccuracy = lastRound.score === lastRound.totalQuestions;
+                    const lastRoundDuration = Math.round(
+                        (new Date(lastRound.endTime).getTime() - new Date(lastRound.startTime).getTime()) / 1000
+                    );
+                    const beatTargetTime = lastRound.targetTime === null || lastRoundDuration <= lastRound.targetTime;
+                    const roundPassed = isPerfectAccuracy && beatTargetTime;
 
-                if (timePassed < restPeriod) {
-                    setIsResting(true);
-                    setRestTimeRemaining(Math.ceil((restPeriod - timePassed) / 1000));
-                    inRest = true;
+                    if (roundPassed) {
+                        const lastRoundEndTime = new Date(lastRound.endTime).getTime();
+                        const now = Date.now();
+                        const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
+                        const timePassed = now - lastRoundEndTime;
+
+                        if (timePassed < restPeriod) {
+                            setIsResting(true);
+                            setRestTimeRemaining(Math.ceil((restPeriod - timePassed) / 1000));
+                            inRest = true;
+                        }
+                    }
                 }
             }
 

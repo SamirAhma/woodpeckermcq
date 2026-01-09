@@ -25,24 +25,35 @@ export default async function Home() {
   }) as any; // Type assertion for Prisma include
 
   // Serialize for Client Component and calculate rest period
-  const serializedSets = sets.map(set => {
+  const serializedSets = sets.map((set: any) => {
     const latestSession = set.sessions[0];
     let restInfo = null;
 
     if (latestSession && latestSession.rounds.length > 0) {
       const lastRound = latestSession.rounds[0];
       if (lastRound.endTime) {
-        const lastRoundEndTime = new Date(lastRound.endTime).getTime();
-        const now = Date.now();
-        const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
-        const timePassed = now - lastRoundEndTime;
+        // Calculate if the round was passed
+        const isPerfectAccuracy = lastRound.score === lastRound.totalQuestions;
+        const lastRoundDuration = Math.round(
+          (new Date(lastRound.endTime).getTime() - new Date(lastRound.startTime).getTime()) / 1000
+        );
+        const beatTargetTime = lastRound.targetTime === null || lastRoundDuration <= lastRound.targetTime;
+        const roundPassed = isPerfectAccuracy && beatTargetTime;
 
-        if (timePassed < restPeriod) {
-          const timeRemaining = Math.ceil((restPeriod - timePassed) / 1000);
-          restInfo = {
-            isResting: true,
-            timeRemaining,
-          };
+        // Only set rest period if the round was passed
+        if (roundPassed) {
+          const lastRoundEndTime = new Date(lastRound.endTime).getTime();
+          const now = Date.now();
+          const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
+          const timePassed = now - lastRoundEndTime;
+
+          if (timePassed < restPeriod) {
+            const timeRemaining = Math.ceil((restPeriod - timePassed) / 1000);
+            restInfo = {
+              isResting: true,
+              timeRemaining,
+            };
+          }
         }
       }
     }
