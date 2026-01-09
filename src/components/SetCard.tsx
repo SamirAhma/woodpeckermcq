@@ -14,10 +14,7 @@ interface SetData {
     _count: {
         questions: number;
     };
-    restInfo?: {
-        isResting: boolean;
-        timeRemaining: number; // in seconds
-    } | null;
+
 }
 
 interface SetCardProps {
@@ -31,24 +28,7 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isFavLoading, setIsFavLoading] = useState(false);
-    const [timeRemaining, setTimeRemaining] = useState(set.restInfo?.timeRemaining || 0);
 
-    // Countdown timer for rest period
-    useEffect(() => {
-        if (!set.restInfo?.isResting || timeRemaining <= 0) return;
-
-        const timer = setInterval(() => {
-            setTimeRemaining(prev => {
-                if (prev <= 1) {
-                    router.refresh(); // Refresh to update rest status
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [set.restInfo?.isResting, timeRemaining, router]);
 
     const formatRestTime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
@@ -117,26 +97,13 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
         setIsMenuOpen(!isMenuOpen);
     };
 
-    const isResting = set.restInfo?.isResting && timeRemaining > 0;
-
     return (
-        <div className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-all group relative flex flex-col h-full ${isResting ? 'border-blue-300 bg-blue-50/30' : 'border-slate-200'
-            }`}>
-            {/* Rest Period Badge */}
-            {isResting && (
-                <div className="absolute top-3 right-3 z-10">
-                    <div className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                        <span>⏰</span>
-                        <span>{formatRestTime(timeRemaining)}</span>
-                    </div>
-                </div>
-            )}
+        <div className="bg-white rounded-xl border shadow-sm hover:shadow-md transition-all group relative flex flex-col h-full border-slate-200">
 
             {/* Header / Meta */}
             <div className="p-6 pb-20 flex-1">
                 <div className="flex justify-between items-start mb-2 pr-16">
-                    <h3 className={`text-lg font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2 ${isResting ? 'text-slate-500' : 'text-slate-900'
-                        }`}>
+                    <h3 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2 text-slate-900">
                         {set.title}
                     </h3>
                     <button
@@ -157,31 +124,16 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
                     <span>•</span>
                     {new Date(set.createdAt).toLocaleDateString()}
                 </p>
-
-                {isResting && (
-                    <div className="bg-blue-100 border border-blue-200 p-2 rounded-lg mt-2">
-                        <p className="text-xs text-blue-700 font-medium">
-                            🧠 Consolidation period - your brain is processing patterns
-                        </p>
-                    </div>
-                )}
             </div>
 
             {/* Bottom Actions Area */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-50/50 border-t border-slate-100 rounded-b-xl flex items-center gap-2">
-                {isResting ? (
-                    <div className="flex-1 py-2.5 bg-slate-300 text-slate-500 font-bold text-sm rounded-lg text-center cursor-not-allowed">
-                        Resting
-                    </div>
-                ) : (
-                    <Link
-                        href={`/study/${set.id}`}
-                        className="flex-1 py-2.5 bg-slate-900 hover:bg-purple-700 text-white font-bold text-sm rounded-lg text-center transition-colors shadow-sm active:scale-[0.98]"
-                    >
-                        Start
-                    </Link>
-                )}
-
+                <Link
+                    href={`/study/${set.id}`}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-primary to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
+                >
+                    Start
+                </Link>
                 <Link
                     href={`/analytics/${set.id}`}
                     className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-colors"
