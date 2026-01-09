@@ -376,6 +376,11 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
     };
 
     const startNextRound = () => {
+        // Prevent starting a new round during rest period
+        if (isResting) {
+            return;
+        }
+
         const queue = shuffleArray([...set.questions]); // New round, shuffled
         setQuestionQueue(queue);
         setCurrentIndex(0);
@@ -488,7 +493,11 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
                         ) : (
                             <button
                                 onClick={startNextRound}
-                                className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-xl text-lg hover:scale-[1.02] transition-transform shadow-lg"
+                                disabled={isResting}
+                                className={`w-full py-4 font-bold rounded-xl text-lg shadow-lg transition-all ${isResting
+                                    ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                                    : 'bg-primary text-primary-foreground hover:scale-[1.02]'
+                                    }`}
                             >
                                 {passed ? `Start Round ${currentRound}` : `Retry Round ${currentRound - 1}`}
                             </button>
@@ -505,7 +514,26 @@ export default function QuizManager({ set, initialSession, targetRounds = 7 }: P
         );
     }
 
-    if (questionQueue.length === 0) {
+    if (questionQueue.length === 0 || isResting) {
+        if (isResting) {
+            return (
+                <div className="bg-blue-500/10 border border-blue-500/20 p-8 rounded-xl text-center">
+                    <h3 className="text-2xl font-bold text-blue-600 mb-4">Consolidation Period</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                        Your brain is consolidating patterns. Next round unlocks in:
+                    </p>
+                    <div className="text-4xl font-mono font-bold text-primary mb-6">
+                        {formatRestTime(restTimeRemaining)}
+                    </div>
+                    <button
+                        onClick={() => router.push("/")}
+                        className="px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:scale-[1.02] transition-transform"
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
+            );
+        }
         return <div className="text-center py-20">Loading questions...</div>;
     }
 
