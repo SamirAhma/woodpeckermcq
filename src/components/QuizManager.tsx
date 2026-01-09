@@ -4,6 +4,11 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { MCQSet, Question, StudySession, Round } from "@prisma/client";
 import { WOODPECKER_CONFIG } from "@/lib/config";
+import { useQuizTimer } from "@/hooks/useQuizTimer";
+import { useRestTimer } from "@/hooks/useRestTimer";
+import ProgressHeader from "./ProgressHeader";
+import QuestionCard from "./QuestionCard";
+import FeedbackPanel from "./FeedbackPanel";
 
 type SetWithQuestions = MCQSet & { questions: Question[] };
 type SessionWithRounds = StudySession & { rounds: Round[] };
@@ -38,10 +43,21 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
     const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
     const [questionDuration, setQuestionDuration] = useState<number>(0);
     const [targetTime, setTargetTime] = useState<number | null>(null);
-    const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const [isPaused, setIsPaused] = useState(false);
-    const [isResting, setIsResting] = useState(false); // FORCE FALSE - rest check disabled
-    const [restTimeRemaining, setRestTimeRemaining] = useState<number>(0);
+    const [isResting, setIsResting] = useState(false);
+
+    // Use custom hooks for timer management
+    const { timeLeft, setTimeLeft, resetTimer } = useQuizTimer({
+        targetTime,
+        isFinished,
+        isPaused,
+        onTimeout: () => finishRound()
+    });
+
+    const { restTimeRemaining, setRestTimeRemaining, formatRestTime } = useRestTimer({
+        isResting,
+        initialTime: 0
+    });
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -167,48 +183,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
 
     // REDEFINED useEffects to keep component consistent within replacement block
 
-    // Rest Timer Effect
-    useEffect(() => {
-        if (!isResting || restTimeRemaining <= 0) return;
-
-        const timer = setInterval(() => {
-            setRestTimeRemaining((prev) => {
-                if (prev <= 1) {
-                    setIsResting(false);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [isResting, restTimeRemaining]);
-
-    const formatRestTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h}h ${m}m ${s}s`;
-    };
-
-    // Countdown Timer Effect
-    useEffect(() => {
-        if (timeLeft === null || isFinished || isPaused || timeLeft <= 0) return;
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev !== null && prev > 0) return prev - 1;
-                return prev;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [timeLeft, isFinished, isPaused]);
-
-    // Handle Time Out
-    useEffect(() => {
-        if (timeLeft === 0 && !isFinished && targetTime !== null) {
-            finishRound();
-        }
-    }, [timeLeft, isFinished, targetTime]);
+    // Timer logic now handled by custom hooks
 
     const startNewSession = async () => {
         setLoading(true);
