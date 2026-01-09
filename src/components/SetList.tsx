@@ -13,6 +13,10 @@ interface SetData {
     _count: {
         questions: number;
     };
+    restInfo?: {
+        isResting: boolean;
+        timeRemaining: number;
+    } | null;
 }
 
 interface SetListProps {
@@ -50,8 +54,8 @@ export default function SetList({ initialSets }: SetListProps) {
                     <button
                         onClick={() => setFilter('all')}
                         className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'all'
-                                ? 'bg-white text-slate-900 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         All Sets
@@ -59,8 +63,8 @@ export default function SetList({ initialSets }: SetListProps) {
                     <button
                         onClick={() => setFilter('favorites')}
                         className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1 ${filter === 'favorites'
-                                ? 'bg-white text-red-600 shadow-sm'
-                                : 'text-slate-500 hover:text-red-500'
+                            ? 'bg-white text-red-600 shadow-sm'
+                            : 'text-slate-500 hover:text-red-500'
                             }`}
                     >
                         <span>♥</span> Favorites
