@@ -31,6 +31,13 @@ export default function Navbar() {
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-3 flex-shrink-0">
+                            <Link
+                                href="/"
+                                className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-primary transition-colors"
+                            >
+                                🏠 Home
+                            </Link>
+
                             <button
                                 onClick={() => setIsCreateOpen(true)}
                                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-purple-600 transition-all shadow-sm hover:shadow-md active:scale-95"
