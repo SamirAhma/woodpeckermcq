@@ -73,7 +73,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
     });
 
     // Timer management
-    const { timeLeft, setTimeLeft, resetTimer } = useQuizTimer({
+    const { timeLeft, setTimeLeft, resetTimer, elapsedTime, questionElapsedTime, resetQuestionTimer } = useQuizTimer({
         targetTime,
         isFinished,
         isPaused,
@@ -98,6 +98,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
     };
 
     const nextQuestion = () => {
+        resetQuestionTimer(); // Reset the live question timer
         const isRoundComplete = nextQuestionBase();
         if (isRoundComplete) {
             finishRound(score, questionQueue.length, attempts);
@@ -108,6 +109,41 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
     const currentRound = (session?.rounds?.length || 0) + 1;
     const totalRounds = session?.targetRounds || targetRounds;
     const isComplete = currentRound > totalRounds;
+
+    // Calculate target time for the current round
+    useEffect(() => {
+        if (!session || session.rounds.length === 0) {
+            setTargetTime(null);
+            return;
+        }
+
+        // Find the most recent PASSED round to base the next target on
+        const passedRounds = session.rounds.filter((r: Round) => r.score === r.totalQuestions);
+        if (passedRounds.length === 0) {
+            setTargetTime(null);
+            return;
+        }
+
+        const lastPassedRound = passedRounds[passedRounds.length - 1];
+        if (lastPassedRound.endTime && lastPassedRound.startTime) {
+            const duration = (new Date(lastPassedRound.endTime).getTime() - new Date(lastPassedRound.startTime).getTime()) / 1000;
+            const newTarget = Math.max(
+                WOODPECKER_CONFIG.MIN_TARGET_TIME_SECONDS,
+                Math.round(duration / WOODPECKER_CONFIG.TARGET_TIME_HALVING_FACTOR)
+            );
+            setTargetTime(newTarget);
+        }
+    }, [session?.rounds]);
+
+    // Auto-advance logic
+    useEffect(() => {
+        if (showFeedback && selectedOption === currentQuestion?.answer) {
+            const timer = setTimeout(() => {
+                nextQuestion();
+            }, WOODPECKER_CONFIG.AUTO_ADVANCE_DELAY_MS);
+            return () => clearTimeout(timer);
+        }
+    }, [showFeedback, selectedOption, currentQuestion?.answer]);
 
     // Loading state
     if (loading || !session || questionQueue.length === 0) {
@@ -173,6 +209,9 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
                 targetTime={targetTime}
                 errorCount={incorrectIds.size}
                 remainingQuestions={questionQueue.length - currentIndex}
+                elapsedTime={elapsedTime}
+                questionElapsedTime={questionElapsedTime}
+                pastRounds={session.rounds}
             />
 
             {isTimedOut && (
@@ -197,6 +236,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
                         isCorrect={selectedOption === currentQuestion.answer}
                         explanation={currentQuestion.explanation || undefined}
                         correctAnswer={currentQuestion.answer}
+                        timeTaken={attempts[attempts.length - 1]?.timeTaken}
                     />
 
                     {selectedOption !== currentQuestion.answer && (

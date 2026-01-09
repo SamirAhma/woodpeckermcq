@@ -9,6 +9,8 @@ interface UseQuizTimerProps {
 
 export function useQuizTimer({ targetTime, isFinished, isPaused, onTimeout }: UseQuizTimerProps) {
     const [timeLeft, setTimeLeft] = useState<number | null>(targetTime);
+    const [elapsedTime, setElapsedTime] = useState(0);
+    const [questionElapsedTime, setQuestionElapsedTime] = useState(0);
 
     // Sync timeLeft with targetTime changes
     useEffect(() => {
@@ -17,19 +19,24 @@ export function useQuizTimer({ targetTime, isFinished, isPaused, onTimeout }: Us
         }
     }, [targetTime]);
 
-    // Countdown timer
+    // Timer effect (both count down and count up)
     useEffect(() => {
-        if (timeLeft === null || isFinished || isPaused || timeLeft <= 0) return;
+        if (isFinished || isPaused) return;
 
         const timer = setInterval(() => {
+            // Always count up total round time
+            setElapsedTime((prev) => prev + 1);
+            setQuestionElapsedTime((prev) => prev + 1);
+
+            // Count down if target exists
             setTimeLeft((prev) => {
-                if (prev !== null && prev > 0) return prev - 1;
-                return prev;
+                if (prev === null) return null;
+                return prev > 0 ? prev - 1 : 0;
             });
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeLeft, isFinished, isPaused]);
+    }, [isFinished, isPaused, timeLeft === null]);
 
     // Handle timeout
     useEffect(() => {
@@ -42,5 +49,9 @@ export function useQuizTimer({ targetTime, isFinished, isPaused, onTimeout }: Us
         setTimeLeft(newTime);
     };
 
-    return { timeLeft, setTimeLeft, resetTimer };
+    const resetQuestionTimer = () => {
+        setQuestionElapsedTime(0);
+    };
+
+    return { timeLeft, setTimeLeft, resetTimer, elapsedTime, questionElapsedTime, resetQuestionTimer };
 }

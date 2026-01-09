@@ -32,6 +32,7 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
     const [incorrectIds, setIncorrectIds] = useState(new Set<string>());
     const [showFeedback, setShowFeedback] = useState(false);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
     // Initialize queue from activeState or fresh
     useEffect(() => {
@@ -58,6 +59,7 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
             setScore(activeState.score || 0);
             setIncorrectIds(new Set(activeState.incorrectIds || []));
             setAttempts(activeState.attempts || []);
+            setQuestionStartTime(Date.now()); // Reset start time on restore
         } else if (questionQueue.length === 0 && questions.length > 0) {
             console.log('[useQuestionQueue] Creating fresh shuffled queue');
             const shuffled = shuffleArray([...questions]);
@@ -70,12 +72,14 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
                 attempts: [],
                 startTime: new Date().toISOString()
             });
+            setQuestionStartTime(Date.now());
         }
     }, [activeState, questions.length, loading]); // Re-run when activeState or loading changes
 
     const handleAnswer = (option: string, currentQuestion: Question, roundNumber: number) => {
         const isCorrect = option === currentQuestion.answer;
-        const timeTaken = Date.now() / 1000; // Simplified
+        const now = Date.now();
+        const timeTaken = (now - questionStartTime) / 1000; // Accurate duration in seconds
 
         setSelectedOption(option);
         setShowFeedback(true);
@@ -111,6 +115,7 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
     };
 
     const nextQuestion = () => {
+        setQuestionStartTime(Date.now()); // Reset start time for the next question
         if (currentIndex + 1 < questionQueue.length) {
             setCurrentIndex(currentIndex + 1);
             setShowFeedback(false);
@@ -143,5 +148,6 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
         nextQuestion,
         setShowFeedback,
         setSelectedOption,
+        questionStartTime,
     };
 }

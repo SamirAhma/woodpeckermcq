@@ -2,14 +2,15 @@ interface FeedbackPanelProps {
     isCorrect: boolean;
     explanation?: string;
     correctAnswer: string;
+    timeTaken?: number;
 }
 
-export default function FeedbackPanel({ isCorrect, explanation, correctAnswer }: FeedbackPanelProps) {
+export default function FeedbackPanel({ isCorrect, explanation, correctAnswer, timeTaken }: FeedbackPanelProps) {
     return (
         <div
             className={`mt-4 p-6 rounded-xl border-2 ${isCorrect
-                    ? "bg-emerald-50 border-emerald-200"
-                    : "bg-red-50 border-red-200"
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-red-50 border-red-200"
                 }`}
         >
             <div className="flex items-start gap-3">
@@ -19,6 +20,11 @@ export default function FeedbackPanel({ isCorrect, explanation, correctAnswer }:
                         }`}>
                         {isCorrect ? "Correct!" : "Incorrect"}
                     </h4>
+                    {timeTaken !== undefined && (
+                        <p className={`text-sm font-medium mb-2 ${isCorrect ? "text-emerald-600" : "text-red-600"}`}>
+                            Time taken: {timeTaken.toFixed(2)}s
+                        </p>
+                    )}
                     {!isCorrect && (
                         <p className="text-sm text-red-600 mb-2">
                             <span className="font-semibold">Correct answer:</span> {correctAnswer}
