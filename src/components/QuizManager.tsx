@@ -29,18 +29,18 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
     const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
-    const [incorrectIds, setIncorrectIds] = useState<Set<string>>(new Set());
+    const [attempts, setAttempts] = useState<any[]>([]);
+    const [incorrectIds, setIncorrectIds] = useState(new Set<string>());
     const [showFeedback, setShowFeedback] = useState(false);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [isFinished, setIsFinished] = useState(false);
     const [roundStartTime, setRoundStartTime] = useState<number>(Date.now());
     const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
-    const [attempts, setAttempts] = useState<any[]>([]);
     const [questionDuration, setQuestionDuration] = useState<number>(0);
     const [targetTime, setTargetTime] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
-    const [isFinished, setIsFinished] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
-    const [isResting, setIsResting] = useState(false);
+    const [isResting, setIsResting] = useState(false); // FORCE FALSE - rest check disabled
     const [restTimeRemaining, setRestTimeRemaining] = useState<number>(0);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -144,6 +144,9 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
                 }
             }
 
+            // Declare rounds here so it's available even when rest check is disabled
+            const rounds = session.rounds || [];
+
             // Recalculate target time regardless (safe to re-run)
             if (rounds.length > 0) {
                 const lastRound = rounds[rounds.length - 1];
@@ -156,7 +159,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
                 if (!activeState) setTimeLeft(newTarget);
             }
         }
-    }, [session]);
+    }, [session, set.questions, isFinished]);
 
     // ... (Existing Rest Timer and Countdown Timer Effects are fine) ...
     // Note: Copied them for replacement context if needed, but ReplaceFileContent targets range.
