@@ -24,20 +24,34 @@ export default async function Home() {
     orderBy: { createdAt: "desc" },
   }) as any; // Type assertion for Prisma include
 
-  // Serialize for Client Component
+  // Serialize for Client Component and calculate rest period for UI display
   const serializedSets = sets.map((set: any) => {
     const latestSession = set.sessions[0];
-    let lastRoundData = null;
+    let restInfo = null;
 
     if (latestSession && latestSession.rounds.length > 0) {
       const lastRound = latestSession.rounds[0];
-      lastRoundData = {
-        endTime: lastRound.endTime ? lastRound.endTime.toISOString() : null,
-        startTime: lastRound.startTime.toISOString(),
-        score: lastRound.score,
-        totalQuestions: lastRound.totalQuestions,
-        targetTime: lastRound.targetTime,
-      };
+      if (lastRound.endTime) {
+        // Calculate if the round was passed
+        const isPerfectAccuracy = lastRound.score === lastRound.totalQuestions;
+        const lastRoundDuration = Math.round(
+          (new Date(lastRound.endTime).getTime() - new Date(lastRound.startTime).getTime()) / 1000
+        );
+        const beatTargetTime = lastRound.targetTime === null || lastRoundDuration <= lastRound.targetTime;
+        const roundPassed = isPerfectAccuracy && beatTargetTime;
+
+        // Only set rest period if the round was passed
+        if (roundPassed) {
+          const lastRoundEndTime = new Date(lastRound.endTime).getTime();
+          const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
+
+          // Store the end time and rest period for client-side calculation
+          restInfo = {
+            lastRoundEndTime: lastRound.endTime.toISOString(),
+            restPeriodMs: restPeriod,
+          };
+        }
+      }
     }
 
     return {
@@ -48,7 +62,7 @@ export default async function Home() {
       updatedAt: set.updatedAt.toISOString(),
       isFavorite: set.isFavorite,
       _count: set._count,
-      lastRoundData,
+      restInfo,
     };
   });
 

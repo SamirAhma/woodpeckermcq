@@ -14,7 +14,10 @@ interface SetData {
     _count: {
         questions: number;
     };
-
+    restInfo?: {
+        lastRoundEndTime: string;
+        restPeriodMs: number;
+    } | null;
 }
 
 interface SetCardProps {
@@ -28,7 +31,37 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isFavLoading, setIsFavLoading] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isResting, setIsResting] = useState(false);
+    const [restTimeRemaining, setRestTimeRemaining] = useState(0);
 
+    // Calculate rest period on client side
+    useEffect(() => {
+        if (!set.restInfo) {
+            setIsResting(false);
+            return;
+        }
+
+        const checkRestPeriod = () => {
+            const lastRoundEndTime = new Date(set.restInfo!.lastRoundEndTime).getTime();
+            const now = Date.now();
+            const timePassed = now - lastRoundEndTime;
+            const restPeriod = set.restInfo!.restPeriodMs;
+
+            if (timePassed < restPeriod) {
+                const timeRemaining = Math.ceil((restPeriod - timePassed) / 1000);
+                setIsResting(true);
+                setRestTimeRemaining(timeRemaining);
+            } else {
+                setIsResting(false);
+                setRestTimeRemaining(0);
+            }
+        };
+
+        checkRestPeriod();
+        const interval = setInterval(checkRestPeriod, 1000);
+        return () => clearInterval(interval);
+    }, [set.restInfo]);
 
     const formatRestTime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
@@ -89,7 +122,6 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
             setIsDeleting(false);
         }
     };
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Close menu when clicking outside
     const toggleMenu = (e: React.MouseEvent) => {
@@ -128,12 +160,27 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
 
             {/* Bottom Actions Area */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-50/50 border-t border-slate-100 rounded-b-xl flex items-center gap-2">
-                <Link
-                    href={`/study/${set.id}`}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-primary to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
-                >
-                    Start
-                </Link>
+                {isResting ? (
+                    <div className="flex-1">
+                        <div className="w-full py-3 px-4 bg-blue-50 border-2 border-blue-200 text-blue-700 font-semibold rounded-lg flex flex-col items-center justify-center gap-1 cursor-not-allowed">
+                            <div className="flex items-center gap-2">
+                                <span>⏸</span>
+                                <span>Rest Period</span>
+                            </div>
+                            <span className="text-xs font-normal">Unlocks in {formatRestTime(restTimeRemaining)}</span>
+                        </div>
+                        <p className="text-xs text-blue-600 mt-2 text-center">
+                            🧠 Your brain is consolidating patterns
+                        </p>
+                    </div>
+                ) : (
+                    <Link
+                        href={`/study/${set.id}`}
+                        className="w-full py-3 px-4 bg-gradient-to-r from-primary to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
+                    >
+                        Start
+                    </Link>
+                )}
                 <Link
                     href={`/analytics/${set.id}`}
                     className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-colors"
