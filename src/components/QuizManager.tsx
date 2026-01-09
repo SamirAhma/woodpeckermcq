@@ -32,6 +32,12 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function QuizManager({ set, initialSession, targetRounds = WOODPECKER_CONFIG.DEFAULT_TARGET_ROUNDS }: Props) {
+    console.log('[QuizManager] Rendered with:', {
+        setId: set.id,
+        hasInitialSession: !!initialSession,
+        targetRounds,
+        initialSessionData: initialSession
+    });
     const router = useRouter();
     const [isFinished, setIsFinished] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
@@ -45,7 +51,9 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         targetRounds,
     });
 
-    // Question queue management
+    console.log('[QuizManager] Session state:', { session, loading });
+
+    // Question queue management - wait for session to be ready
     const {
         questionQueue,
         currentIndex,
@@ -59,8 +67,9 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         nextQuestion: nextQuestionBase,
     } = useQuestionQueue({
         questions: set.questions,
-        activeState: (session as any)?.activeState,
+        activeState: session?.activeState, // Use session.activeState, not initialSession
         onSaveProgress: saveProgress,
+        loading, // Pass loading state to prevent race condition
     });
 
     // Timer management

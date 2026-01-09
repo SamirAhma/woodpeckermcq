@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import SetList from "@/components/SetList";
 import Navbar from "@/components/Navbar";
+import SearchBar from "@/components/SearchBar";
 import { Suspense } from "react";
 import { WOODPECKER_CONFIG } from "@/lib/config";
 
@@ -72,8 +73,13 @@ export default async function Home() {
 
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <section className="space-y-6">
-          <div className="flex justify-between items-end">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Your Sets</h2>
+            <div className="w-full sm:max-w-md">
+              <Suspense fallback={<div className="w-full h-10 bg-slate-100 rounded-full animate-pulse" />}>
+                <SearchBar />
+              </Suspense>
+            </div>
           </div>
           <Suspense fallback={<div className="text-center py-12">Loading sets...</div>}>
             <SetList initialSets={serializedSets} />

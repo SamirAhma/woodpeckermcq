@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, Suspense } from "react";
-import SearchBar from "./SearchBar";
+import { useState } from "react";
 import LogoutButton from "./LogoutButton";
 import CreateSetModal from "./CreateSetModal";
 
@@ -22,12 +21,7 @@ export default function Navbar() {
                             <span className="font-bold text-xl tracking-tight hidden sm:block">Woodpecker</span>
                         </Link>
 
-                        {/* Search Bar - Centered */}
-                        <div className="flex-1 max-w-xl mx-4">
-                            <Suspense fallback={<div className="w-full h-10 bg-slate-100 rounded-full animate-pulse hidden md:block" />}>
-                                <SearchBar />
-                            </Suspense>
-                        </div>
+                        <div className="flex-1" />
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-3 flex-shrink-0">

@@ -13,18 +13,24 @@ export default function SearchBar() {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
+
+            // Only update URL if text has changed from what's already there
+            const currentQ = params.get("q") || "";
+            if (text === currentQ) return;
+
             if (text) {
                 params.set("q", text);
             } else {
                 params.delete("q");
             }
+
             startTransition(() => {
                 router.replace(`/?${params.toString()}`);
             });
         }, WOODPECKER_CONFIG.AUTO_ADVANCE_DELAY_MS);
 
         return () => clearTimeout(timeoutId);
-    }, [text, router]); // Removed searchParams dependency to prevent infinite loop
+    }, [text, router]);
 
 
     return (

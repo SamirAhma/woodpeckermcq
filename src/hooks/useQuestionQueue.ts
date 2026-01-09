@@ -15,9 +15,16 @@ interface UseQuestionQueueProps {
     questions: Question[];
     activeState?: any;
     onSaveProgress: (state: any) => void;
+    loading?: boolean; // Add loading flag
 }
 
-export function useQuestionQueue({ questions, activeState, onSaveProgress }: UseQuestionQueueProps) {
+export function useQuestionQueue({ questions, activeState, onSaveProgress, loading = false }: UseQuestionQueueProps) {
+    console.log('[useQuestionQueue] Initialized with:', {
+        questionCount: questions.length,
+        hasActiveState: !!activeState,
+        loading,
+        activeState
+    });
     const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
@@ -28,7 +35,21 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress }: Use
 
     // Initialize queue from activeState or fresh
     useEffect(() => {
+        console.log('[useQuestionQueue] useEffect triggered', {
+            hasActiveState: !!activeState,
+            queueLength: questionQueue.length,
+            loading,
+            activeStateData: activeState
+        });
+
+        // Wait for session to finish loading before initializing
+        if (loading) {
+            console.log('[useQuestionQueue] Waiting for session to load...');
+            return;
+        }
+
         if (activeState && activeState.queue && activeState.queue.length > 0) {
+            console.log('[useQuestionQueue] Restoring from activeState');
             const restoredQueue = activeState.queue
                 .map((id: string) => questions.find(q => q.id === id))
                 .filter(Boolean) as Question[];
@@ -37,7 +58,8 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress }: Use
             setScore(activeState.score || 0);
             setIncorrectIds(new Set(activeState.incorrectIds || []));
             setAttempts(activeState.attempts || []);
-        } else if (questionQueue.length === 0) {
+        } else if (questionQueue.length === 0 && questions.length > 0) {
+            console.log('[useQuestionQueue] Creating fresh shuffled queue');
             const shuffled = shuffleArray([...questions]);
             setQuestionQueue(shuffled);
             onSaveProgress({
@@ -49,7 +71,7 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress }: Use
                 startTime: new Date().toISOString()
             });
         }
-    }, [activeState, questions]);
+    }, [activeState, questions.length, loading]); // Re-run when activeState or loading changes
 
     const handleAnswer = (option: string, currentQuestion: Question, roundNumber: number) => {
         const isCorrect = option === currentQuestion.answer;

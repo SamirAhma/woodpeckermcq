@@ -10,10 +10,12 @@ interface UseQuizSessionProps {
 }
 
 export function useQuizSession({ setId, initialSession, targetRounds }: UseQuizSessionProps) {
+    console.log('[useQuizSession] Initialized with:', { setId, hasInitialSession: !!initialSession, targetRounds });
     const [session, setSession] = useState<SessionWithRounds | undefined>(initialSession);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(!initialSession);
 
     const startNewSession = async () => {
+        console.log('[useQuizSession] Starting new session...');
         setLoading(true);
         try {
             const resp = await fetch("/api/sessions", {
@@ -22,6 +24,7 @@ export function useQuizSession({ setId, initialSession, targetRounds }: UseQuizS
                 body: JSON.stringify({ setId, targetRounds }),
             });
             const data = await resp.json();
+            console.log('[useQuizSession] New session created:', data);
             setSession(data);
         } catch (e) {
             console.error("Failed to start session", e);
@@ -65,10 +68,17 @@ export function useQuizSession({ setId, initialSession, targetRounds }: UseQuizS
     };
 
     useEffect(() => {
+        console.log('[useQuizSession] useEffect', {
+            hasSession: !!session,
+            loading,
+            setId
+        });
+
         if (!session) {
+            console.log('[useQuizSession] No session, starting new one');
             startNewSession();
         }
-    }, []);
+    }, [setId]);
 
     return {
         session,
