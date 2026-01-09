@@ -286,17 +286,16 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         setAttempts(newAttempts);
 
         let newScore = score;
-        let newIncorrectIds = new Set(incorrectIds);
+        const newIncorrectIds = new Set(incorrectIds);
 
         if (isCorrect) {
             newScore = score + 1;
             setScore(newScore);
             newIncorrectIds.delete(currentQuestion.id);
-            setIncorrectIds(newIncorrectIds);
         } else {
             newIncorrectIds.add(currentQuestion.id);
-            setIncorrectIds(newIncorrectIds);
         }
+        setIncorrectIds(newIncorrectIds);
 
         // SAVE ACTIVE STATE
         saveProgress({
@@ -503,7 +502,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
                         </div>
                         {isResting && passed ? (
                             <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-xl mb-4">
-                                <h3 className="text-xl font-bold text-blue-600 mb-2">Consolidation Period</h3>
+                                <p className="text-4xl font-bold text-slate-200 mb-2">You&apos;re doing great!</p>
                                 <p className="text-sm text-muted-foreground mb-4">
                                     Your brain is consolidating patterns. Next round unlocks in:
                                 </p>
