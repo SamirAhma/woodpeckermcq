@@ -15,6 +15,17 @@ export async function POST(req: NextRequest) {
             body = parseTOON(text);
         } else {
             body = await req.json();
+
+            // Support minified JSON format: [{q,o,a,e,t}, ...]
+            if (Array.isArray(body) && body.length > 0 && "q" in body[0]) {
+                body = body.map((item: any) => ({
+                    question: item.q,
+                    options: item.o,
+                    answer: item.a,
+                    explanation: item.e,
+                    pattern_tag: item.t
+                }));
+            }
         }
 
         // Try to validate as a structured object first, then as a direct array
