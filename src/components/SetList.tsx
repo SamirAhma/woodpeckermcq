@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation"; // Import useSearchParams
+import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import SetCard from "./SetCard";
+import { WOODPECKER_CONFIG } from "@/lib/config";
 
 interface SetData {
     id: string;
@@ -13,9 +14,12 @@ interface SetData {
     _count: {
         questions: number;
     };
-    restInfo?: {
-        isResting: boolean;
-        timeRemaining: number;
+    lastRoundData?: {
+        endTime: string | null;
+        startTime: string;
+        score: number;
+        totalQuestions: number;
+        targetTime: number | null;
     } | null;
 }
 
@@ -29,10 +33,6 @@ export default function SetList({ initialSets }: SetListProps) {
     const searchTerm = searchParams.get("q") || ""; // Read from URL
     const [filter, setFilter] = useState<'all' | 'favorites'>('all');
 
-    useEffect(() => {
-        setSets(initialSets);
-    }, [initialSets]);
-
     const handleUpdateSet = (updatedSet: Partial<SetData> & { id: string }) => {
         setSets(prev => prev.map(s => s.id === updatedSet.id ? { ...s, ...updatedSet } : s));
     };
@@ -41,7 +41,46 @@ export default function SetList({ initialSets }: SetListProps) {
         setSets(prev => prev.filter(s => s.id !== id));
     };
 
-    const filteredSets = sets.filter(set => {
+    // Calculate rest info on client side with stable dependencies
+    const setsWithRestInfo = useMemo(() => {
+        return sets.map(set => {
+            if (!set.lastRoundData?.endTime) {
+                return { ...set, restInfo: null };
+            }
+
+            const { endTime, startTime, score, totalQuestions, targetTime } = set.lastRoundData;
+            const isPerfectAccuracy = score === totalQuestions;
+            const lastRoundDuration = Math.round(
+                (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+            );
+            const beatTargetTime = targetTime === null || lastRoundDuration <= targetTime;
+            const roundPassed = isPerfectAccuracy && beatTargetTime;
+
+            if (!roundPassed) {
+                return { ...set, restInfo: null };
+            }
+
+            const lastRoundEndTime = new Date(endTime).getTime();
+            const now = Date.now();
+            const restPeriod = WOODPECKER_CONFIG.REST_PERIOD_MS;
+            const timePassed = now - lastRoundEndTime;
+
+            if (timePassed < restPeriod) {
+                const timeRemaining = Math.ceil((restPeriod - timePassed) / 1000);
+                return {
+                    ...set,
+                    restInfo: {
+                        isResting: true,
+                        timeRemaining,
+                    },
+                };
+            }
+
+            return { ...set, restInfo: null };
+        });
+    }, [sets]);
+
+    const filteredSets = setsWithRestInfo.filter(set => {
         const matchesSearch = set.title.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter = filter === 'all' || (filter === 'favorites' && set.isFavorite);
         return matchesSearch && matchesFilter;
