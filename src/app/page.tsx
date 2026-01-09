@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import SetUploadForm from "@/components/SetUploadForm";
-import SetCard from "@/components/SetCard";
+import SetList from "@/components/SetList";
 import LogoutButton from "@/components/LogoutButton";
 
 export default async function Home() {
@@ -12,6 +12,14 @@ export default async function Home() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  // Serialize for Client Component
+  const serializedSets = sets.map(set => ({
+    ...set,
+    createdAt: set.createdAt.toISOString(),
+    updatedAt: set.updatedAt.toISOString(),
+    isFavorite: set.isFavorite // Ensure defaults are handled if null, but schema says default(false)
+  }));
 
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
@@ -30,17 +38,7 @@ export default async function Home() {
 
       <section>
         <h2 className="text-xl font-semibold mb-4">Your MCQ Sets</h2>
-        <div className="grid gap-4">
-          {sets.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
-              No sets found. Upload a JSON to get started.
-            </p>
-          ) : (
-            sets.map((set) => (
-              <SetCard key={set.id} set={set} />
-            ))
-          )}
-        </div>
+        <SetList initialSets={serializedSets} />
       </section>
     </main>
   );

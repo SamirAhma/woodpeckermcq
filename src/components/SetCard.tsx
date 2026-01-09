@@ -6,21 +6,55 @@ import Link from "next/link";
 import DownloadSetButton from "./DownloadSetButton";
 import AddQuestionsModal from "./AddQuestionsModal";
 
-interface SetCardProps {
-    set: {
-        id: string;
-        title: string;
-        createdAt: Date;
-        _count: {
-            questions: number;
-        };
+interface SetData {
+    id: string;
+    title: string;
+    createdAt: string; // Standardized to string for client consistency
+    isFavorite: boolean;
+    _count: {
+        questions: number;
     };
 }
 
-export default function SetCard({ set }: SetCardProps) {
+interface SetCardProps {
+    set: SetData;
+    onUpdate?: (updated: Partial<SetData> & { id: string }) => void;
+    onDelete?: (id: string) => void;
+}
+
+export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isFavLoading, setIsFavLoading] = useState(false);
+
+    const toggleFavorite = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (isFavLoading) return;
+
+        setIsFavLoading(true);
+        const newStatus = !set.isFavorite;
+
+        // Optimistic update
+        if (onUpdate) onUpdate({ id: set.id, isFavorite: newStatus });
+
+        try {
+            await fetch(`/api/sets/${set.id}/favorite`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isFavorite: newStatus }),
+            });
+            // Success, state already updated optimistically
+            router.refresh();
+        } catch (error) {
+            console.error(error);
+            // Revert on error
+            if (onUpdate) onUpdate({ id: set.id, isFavorite: !newStatus });
+            alert("Failed to update favorite status");
+        } finally {
+            setIsFavLoading(false);
+        }
+    };
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this set? This action cannot be undone.")) return;
@@ -29,7 +63,11 @@ export default function SetCard({ set }: SetCardProps) {
         try {
             const res = await fetch(`/api/sets/${set.id}`, { method: "DELETE" });
             if (res.ok) {
-                router.refresh();
+                if (onDelete) {
+                    onDelete(set.id);
+                } else {
+                    router.refresh();
+                }
             } else {
                 alert("Failed to delete set");
             }
@@ -42,8 +80,21 @@ export default function SetCard({ set }: SetCardProps) {
     };
 
     return (
-        <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all group">
-            <div className="mb-6">
+        <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all group relative">
+            <button
+                onClick={toggleFavorite}
+                className={`absolute top-4 right-4 p-2 rounded-full transition-all ${set.isFavorite
+                    ? "text-red-500 bg-red-50 hover:bg-red-100"
+                    : "text-slate-300 hover:text-red-400 hover:bg-slate-50"
+                    }`}
+                title={set.isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+                <span className={`text-xl leading-none ${isFavLoading ? "opacity-50" : ""}`}>
+                    {set.isFavorite ? "❤️" : "🤍"}
+                </span>
+            </button>
+
+            <div className="mb-6 pr-10">
                 <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-1 group-hover:text-purple-700 transition-colors">
                     {set.title}
                 </h3>
