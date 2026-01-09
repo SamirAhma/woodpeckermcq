@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function SetUploadForm() {
+interface SetUploadFormProps {
+    onSuccess?: () => void;
+}
+
+export default function SetUploadForm({ onSuccess }: SetUploadFormProps) {
     const [title, setTitle] = useState("");
     const [targetRounds, setTargetRounds] = useState(7);
     const [input, setInput] = useState("");
@@ -67,6 +71,7 @@ export default function SetUploadForm() {
             setTargetRounds(7);
             router.refresh();
             alert("Set created successfully!");
+            if (onSuccess) onSuccess();
         } catch (e: any) {
             setError(e.message);
         } finally {

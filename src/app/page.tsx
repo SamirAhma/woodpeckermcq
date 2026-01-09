@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import SetUploadForm from "@/components/SetUploadForm";
 import SetList from "@/components/SetList";
-import LogoutButton from "@/components/LogoutButton";
+import Navbar from "@/components/Navbar";
+import { Suspense } from "react";
 
 export default async function Home() {
   const sets = await prisma.mCQSet.findMany({
@@ -22,24 +22,19 @@ export default async function Home() {
   }));
 
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
-      <header className="mb-12 flex justify-between items-start">
-        <div>
-          <h1 className="text-4xl font-bold mb-2 tracking-tight">Woodpecker MCQ</h1>
-          <p className="text-muted-foreground">Master any topic through repetition.</p>
-        </div>
-        <LogoutButton />
-      </header>
+    <div className="min-h-screen bg-slate-50/50">
+      <Navbar />
 
-      <section className="mb-12 bg-card p-6 rounded-xl border shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Create New Set</h2>
-        <SetUploadForm />
-      </section>
-
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Your MCQ Sets</h2>
-        <SetList initialSets={serializedSets} />
-      </section>
-    </main>
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <section className="space-y-6">
+          <div className="flex justify-between items-end">
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Your Sets</h2>
+          </div>
+          <Suspense fallback={<div className="text-center py-12">Loading sets...</div>}>
+            <SetList initialSets={serializedSets} />
+          </Suspense>
+        </section>
+      </main>
+    </div>
   );
 }

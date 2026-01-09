@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation"; // Import useSearchParams
 import SetCard from "./SetCard";
 
 interface SetData {
@@ -20,8 +21,13 @@ interface SetListProps {
 
 export default function SetList({ initialSets }: SetListProps) {
     const [sets, setSets] = useState<SetData[]>(initialSets);
-    const [searchTerm, setSearchTerm] = useState("");
+    const searchParams = useSearchParams();
+    const searchTerm = searchParams.get("q") || ""; // Read from URL
     const [filter, setFilter] = useState<'all' | 'favorites'>('all');
+
+    useEffect(() => {
+        setSets(initialSets);
+    }, [initialSets]);
 
     const handleUpdateSet = (updatedSet: Partial<SetData> & { id: string }) => {
         setSets(prev => prev.map(s => s.id === updatedSet.id ? { ...s, ...updatedSet } : s));
@@ -39,19 +45,8 @@ export default function SetList({ initialSets }: SetListProps) {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-4 rounded-xl border shadow-sm">
-                <div className="relative w-full sm:w-96">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Search sets..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
-                    />
-                </div>
-
-                <div className="flex bg-slate-100 p-1 rounded-lg">
+            <div className="flex flex-col sm:flex-row gap-4 justify-end items-center mb-6">
+                <div className="flex bg-slate-200 p-1 rounded-lg">
                     <button
                         onClick={() => setFilter('all')}
                         className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'all'
@@ -59,7 +54,7 @@ export default function SetList({ initialSets }: SetListProps) {
                                 : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
-                        All
+                        All Sets
                     </button>
                     <button
                         onClick={() => setFilter('favorites')}
@@ -73,7 +68,7 @@ export default function SetList({ initialSets }: SetListProps) {
                 </div>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredSets.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed bg-slate-50/50">
                         {sets.length === 0

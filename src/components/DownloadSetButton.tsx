@@ -5,9 +5,10 @@ import { useState } from "react";
 interface DownloadSetButtonProps {
     setId: string;
     title: string;
+    variant?: "buttons" | "menu";
 }
 
-export default function DownloadSetButton({ setId, title }: DownloadSetButtonProps) {
+export default function DownloadSetButton({ setId, title, variant = "buttons" }: DownloadSetButtonProps) {
     const [loading, setLoading] = useState(false);
 
     const handleDownload = async (format: "json" | "toon") => {
@@ -32,6 +33,27 @@ export default function DownloadSetButton({ setId, title }: DownloadSetButtonPro
             setLoading(false);
         }
     };
+
+    if (variant === "menu") {
+        return (
+            <>
+                <button
+                    onClick={() => handleDownload("toon")}
+                    disabled={loading}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md flex items-center gap-2"
+                >
+                    <span>📥</span> Download TOON
+                </button>
+                <button
+                    onClick={() => handleDownload("json")}
+                    disabled={loading}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-md flex items-center gap-2"
+                >
+                    <span>📥</span> Download JSON
+                </button>
+            </>
+        );
+    }
 
     return (
         <div className="grid grid-cols-2 gap-3">

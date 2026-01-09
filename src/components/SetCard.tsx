@@ -78,69 +78,92 @@ export default function SetCard({ set, onUpdate, onDelete }: SetCardProps) {
             setIsDeleting(false);
         }
     };
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Close menu when clicking outside
+    const toggleMenu = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsMenuOpen(!isMenuOpen);
+    };
 
     return (
-        <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all group relative">
-            <button
-                onClick={toggleFavorite}
-                className={`absolute top-4 right-4 p-2 rounded-full transition-all ${set.isFavorite
-                    ? "text-red-500 bg-red-50 hover:bg-red-100"
-                    : "text-slate-300 hover:text-red-400 hover:bg-slate-50"
-                    }`}
-                title={set.isFavorite ? "Remove from favorites" : "Add to favorites"}
-            >
-                <span className={`text-xl leading-none ${isFavLoading ? "opacity-50" : ""}`}>
-                    {set.isFavorite ? "❤️" : "🤍"}
-                </span>
-            </button>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all group relative flex flex-col h-full">
+            {/* Header / Meta */}
+            <div className="p-6 pb-20 flex-1">
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-slate-900 leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                        {set.title}
+                    </h3>
+                    <button
+                        onClick={toggleFavorite}
+                        className={`p-1.5 rounded-full transition-all flex-shrink-0 ml-2 ${set.isFavorite
+                            ? "text-red-500 bg-red-50"
+                            : "text-slate-300 hover:text-red-400 hover:bg-slate-50"
+                            }`}
+                    >
+                        {set.isFavorite ? "❤️" : "🤍"}
+                    </button>
+                </div>
 
-            <div className="mb-6 pr-10">
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-1 group-hover:text-purple-700 transition-colors">
-                    {set.title}
-                </h3>
-                <p className="text-sm text-slate-500 font-medium flex items-center gap-2">
-                    <span className="inline-block px-2 py-0.5 bg-slate-100 rounded text-slate-600 text-xs">
-                        {set._count.questions} questions
+                <p className="text-xs text-slate-500 font-medium flex items-center gap-2 mb-4">
+                    <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">
+                        {set._count.questions} Qs
                     </span>
                     <span>•</span>
                     {new Date(set.createdAt).toLocaleDateString()}
                 </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* Bottom Actions Area */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-50/50 border-t border-slate-100 rounded-b-xl flex items-center gap-2">
                 <Link
                     href={`/study/${set.id}`}
-                    className="col-span-2 py-2.5 bg-slate-900 hover:bg-purple-700 text-white font-semibold rounded-lg text-center transition-colors shadow-sm"
+                    className="flex-1 py-2.5 bg-slate-900 hover:bg-purple-700 text-white font-bold text-sm rounded-lg text-center transition-colors shadow-sm active:scale-[0.98]"
                 >
-                    Start Woodpecker
+                    Start
                 </Link>
 
                 <Link
                     href={`/analytics/${set.id}`}
-                    className="py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-center text-sm transition-colors"
+                    className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-colors"
+                    title="Analytics"
                 >
-                    Analytics
+                    📊
                 </Link>
 
-                <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="py-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 font-medium rounded-lg text-center text-sm transition-colors disabled:opacity-50"
-                >
-                    {isDeleting ? "..." : "Delete Set"}
-                </button>
-
-                <div className="col-span-2 pt-2 border-t border-slate-100 flex gap-2">
-                    <DownloadSetButton setId={set.id} title={set.title} />
-
+                {/* More Menu */}
+                <div className="relative">
                     <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center justify-center p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors gap-2 group flex-1"
-                        title="Add more questions"
+                        onClick={toggleMenu}
+                        className={`w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors ${isMenuOpen ? 'bg-slate-100 ring-2 ring-slate-200' : ''}`}
                     >
-                        <span className="text-xl leading-none font-bold">+</span>
-                        <span className="text-xs font-bold uppercase tracking-wider">Add Qs</span>
+                        ⋮
                     </button>
+
+                    {isMenuOpen && (
+                        <>
+                            <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
+                            <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-20 overflow-hidden animate-in zoom-in-95 duration-200">
+                                <div className="p-1">
+                                    <button
+                                        onClick={() => { setIsAddModalOpen(true); setIsMenuOpen(false); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-md flex items-center gap-2"
+                                    >
+                                        <span>➕</span> Add Questions
+                                    </button>
+                                    <div className="h-px bg-slate-100 my-1"></div>
+                                    <DownloadSetButton setId={set.id} title={set.title} variant="menu" />
+                                    <div className="h-px bg-slate-100 my-1"></div>
+                                    <button
+                                        onClick={() => { handleDelete(); setIsMenuOpen(false); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2"
+                                    >
+                                        <span>🗑️</span> Delete Set
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
