@@ -23,6 +23,28 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Set not found" }, { status: 404 });
         }
 
+        // CHECK FOR EXISTING ACTIVE SESSION
+        const existingSession = await prisma.studySession.findFirst({
+            where: {
+                setId: setId,
+                currentRound: { lte: set.targetRounds } // Find incomplete sessions
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                set: {
+                    include: { questions: true }
+                },
+                rounds: {
+                    orderBy: { roundNumber: "asc" }
+                }
+            }
+        });
+
+        if (existingSession) {
+            return NextResponse.json(existingSession, { status: 200 });
+        }
+
+        // Create new if none exists
         const session = await prisma.studySession.create({
             data: {
                 setId,
@@ -34,6 +56,7 @@ export async function POST(req: NextRequest) {
                         questions: true,
                     },
                 },
+                rounds: true // Include empty rounds array for consistency
             },
         });
 
