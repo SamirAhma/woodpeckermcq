@@ -537,51 +537,16 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center mb-4">
-                <div className="flex flex-col gap-2">
-                    <div className="flex gap-2">
-                        <span className="text-sm font-medium bg-secondary px-3 py-1 rounded-full text-secondary-foreground w-fit">
-                            Question {currentIndex + 1} / {questionQueue.length}
-                        </span>
-                        {incorrectIds.size > 0 && (
-                            <span className="text-sm font-bold bg-red-100 text-red-600 px-3 py-1 rounded-full w-fit flex items-center gap-1">
-                                {incorrectIds.size} Error{incorrectIds.size > 1 ? 's' : ''}
-                            </span>
-                        )}
-                    </div>
-                    {targetTime !== null ? (
-                        <span className="text-xs font-bold text-red-500 uppercase tracking-wider ml-1">
-                            Target: {formatTime(targetTime)}
-                        </span>
-                    ) : (
-                        <span className="text-xs font-bold text-green-500 uppercase tracking-wider ml-1">
-                            No Time Limit
-                        </span>
-                    )}
-                    <span className="text-xs text-muted-foreground ml-1">
-                        Round {currentRound} of {totalRounds}
-                    </span>
-                </div>
-
-                <div className="flex flex-col items-end gap-1">
-                    <div className="flex items-center gap-3">
-                        <div className={`text-sm font-mono font-bold px-2 py-1 rounded ${questionDuration < WOODPECKER_CONFIG.QUESTION_TIME_FAST_THRESHOLD ? "text-green-500 bg-green-500/10" :
-                            questionDuration < WOODPECKER_CONFIG.QUESTION_TIME_MEDIUM_THRESHOLD ? "text-yellow-500 bg-yellow-500/10" :
-                                "text-red-500 bg-red-500/10"
-                            }`}>
-                            {questionDuration.toFixed(1)}s
-                        </div>
-                        {timeLeft !== null && (
-                            <div className={`text-2xl font-mono font-bold ${timeLeft < 10 ? "text-red-500 animate-pulse" : "text-primary"}`}>
-                                {formatTime(timeLeft)}
-                            </div>
-                        )}
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground">
-                        Score: {score}
-                    </span>
-                </div>
-            </div>
+            <ProgressHeader
+                currentRound={currentRound}
+                targetRounds={totalRounds}
+                score={score}
+                totalQuestions={questionQueue.length}
+                timeLeft={timeLeft}
+                targetTime={targetTime}
+                errorCount={incorrectIds.size}
+                remainingQuestions={questionQueue.length - currentIndex}
+            />
 
             {isTimedOut && (
                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
@@ -589,63 +554,26 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
                 </div>
             )}
 
-            <div className="bg-card p-8 rounded-2xl border shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
-                    <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${((currentIndex + 1) / questionQueue.length) * 100}%` }}
-                    />
-                </div>
-
-                <h2 className="text-2xl font-semibold mb-8 leading-tight">
-                    {currentQuestion.question}
-                </h2>
-
-                <div className="grid gap-3">
-                    {shuffledOptions.map((option) => {
-                        const isCorrect = option === currentQuestion.answer;
-                        const isSelected = option === selectedOption;
-
-                        let btnClass = "p-4 text-left border-2 rounded-xl transition-all font-medium text-lg ";
-                        if (showFeedback) {
-                            if (isCorrect) btnClass += "bg-green-500/10 border-green-500 text-green-700 dark:text-green-400";
-                            else if (isSelected) btnClass += "bg-red-500/10 border-red-500 text-red-700 dark:text-red-400 opacity-80";
-                            else btnClass += "opacity-40 border-transparent grayscale-[0.5]";
-                        } else {
-                            btnClass += "hover:bg-accent border-muted-foreground/10 hover:border-primary/50 cursor-pointer active:scale-[0.98]";
-                        }
-
-                        return (
-                            <button
-                                key={option}
-                                onClick={() => handleAnswer(option)}
-                                className={btnClass}
-                                disabled={showFeedback || isTimedOut}
-                            >
-                                {option}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+            <QuestionCard
+                question={currentQuestion}
+                questionNumber={currentIndex + 1}
+                totalQuestions={questionQueue.length}
+                selectedOption={selectedOption}
+                showFeedback={showFeedback}
+                onAnswer={handleAnswer}
+                disabled={showFeedback || isTimedOut}
+            />
 
             {showFeedback && (
                 <div className="animate-in slide-in-from-bottom-4 duration-300">
-                    {(currentQuestion.explanation || currentQuestion.patternTag) && (
-                        <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl mb-4">
-                            {currentQuestion.patternTag && (
-                                <span className="inline-block bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mb-2">
-                                    {currentQuestion.patternTag}
-                                </span>
-                            )}
-                            {currentQuestion.explanation && (
-                                <p className="text-sm leading-relaxed">{currentQuestion.explanation}</p>
-                            )}
-                        </div>
-                    )}
+                    <FeedbackPanel
+                        isCorrect={selectedOption === currentQuestion.answer}
+                        explanation={currentQuestion.explanation || undefined}
+                        correctAnswer={currentQuestion.answer}
+                    />
 
                     {selectedOption !== currentQuestion.answer && (
-                        <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl mb-4">
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl mb-4 mt-4">
                             <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
                                 ⚠️ This question will be repeated in this round until answered correctly.
                             </p>
@@ -654,7 +582,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
 
                     <button
                         onClick={nextQuestion}
-                        className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-xl text-lg hover:shadow-xl transition-all"
+                        className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-xl text-lg hover:shadow-xl transition-all mt-4"
                     >
                         {currentIndex + 1 < questionQueue.length ? "Next Question" : (incorrectIds.size > 0 ? "Retry Incorrect Questions" : "Finish Round")}
                     </button>
