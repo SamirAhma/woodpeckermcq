@@ -65,6 +65,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         currentQuestion,
         handleAnswer: handleAnswerBase,
         nextQuestion: nextQuestionBase,
+        questionStartTime,
     } = useQuestionQueue({
         questions: set.questions,
         activeState: session?.activeState, // Use session.activeState, not initialSession
@@ -77,7 +78,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         targetTime,
         isFinished,
         isPaused,
-        onTimeout: () => finishRound(score, questionQueue.length, attempts)
+        onTimeout: () => finishRound(score, questionQueue.length, attempts, questionStartTime, targetTime)
     });
 
     const { restTimeRemaining, setRestTimeRemaining, formatRestTime } = useRestTimer({
@@ -101,7 +102,7 @@ export default function QuizManager({ set, initialSession, targetRounds = WOODPE
         resetQuestionTimer(); // Reset the live question timer
         const isRoundComplete = nextQuestionBase();
         if (isRoundComplete) {
-            finishRound(score, questionQueue.length, attempts);
+            finishRound(score, questionQueue.length, attempts, questionStartTime, targetTime);
             setIsFinished(true);
         }
     };

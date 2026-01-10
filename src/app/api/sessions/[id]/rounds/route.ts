@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RoundSchema } from "@/lib/schemas";
+import { Prisma } from "@prisma/client";
 
 export async function POST(
     req: NextRequest,
@@ -41,11 +42,15 @@ export async function POST(
                         currentRound: {
                             increment: 1,
                         },
+                        activeState: Prisma.DbNull, // Clear transient progress when round is officially recorded
                     },
                 });
             } else {
-                session = await tx.studySession.findUnique({
+                session = await tx.studySession.update({
                     where: { id: sessionId },
+                    data: {
+                        activeState: Prisma.DbNull, // Also clear if recording a failure (to restart the round attempt)
+                    },
                 });
             }
 

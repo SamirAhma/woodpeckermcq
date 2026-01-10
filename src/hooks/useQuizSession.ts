@@ -46,7 +46,13 @@ export function useQuizSession({ setId, initialSession, targetRounds }: UseQuizS
         }
     };
 
-    const finishRound = async (score: number, totalQuestions: number, attempts: any[]) => {
+    const finishRound = async (
+        score: number,
+        totalQuestions: number,
+        attempts: any[],
+        startTime: number,
+        targetTime: number | null
+    ) => {
         if (!session) return;
         try {
             await fetch(`/api/sessions/${session.id}/rounds`, {
@@ -56,6 +62,10 @@ export function useQuizSession({ setId, initialSession, targetRounds }: UseQuizS
                     score,
                     totalQuestions,
                     attempts,
+                    startTime: new Date(startTime).toISOString(),
+                    endTime: new Date().toISOString(),
+                    targetTime,
+                    passed: true, // Mark as passed to trigger round increment
                 }),
             });
             // Reload session

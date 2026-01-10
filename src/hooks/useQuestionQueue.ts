@@ -60,10 +60,17 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
             setIncorrectIds(new Set(activeState.incorrectIds || []));
             setAttempts(activeState.attempts || []);
             setQuestionStartTime(Date.now()); // Reset start time on restore
-        } else if (questionQueue.length === 0 && questions.length > 0) {
-            console.log('[useQuestionQueue] Creating fresh shuffled queue');
+        } else if (questions.length > 0 && questionQueue.length === 0) {
+            // Fresh start or Round Transition (activeState cleared by backend)
+            console.log('[useQuestionQueue] Initializing fresh shuffled queue');
             const shuffled = shuffleArray([...questions]);
             setQuestionQueue(shuffled);
+            setCurrentIndex(0);
+            setScore(0);
+            setIncorrectIds(new Set());
+            setAttempts([]);
+
+            // Only save if we don't already have one (to avoid loops)
             onSaveProgress({
                 index: 0,
                 score: 0,
@@ -74,7 +81,7 @@ export function useQuestionQueue({ questions, activeState, onSaveProgress, loadi
             });
             setQuestionStartTime(Date.now());
         }
-    }, [activeState, questions.length, loading]); // Re-run when activeState or loading changes
+    }, [activeState, questions.length, loading, questionQueue.length === 0]); // Re-run when state should trigger reset
 
     const handleAnswer = (option: string, currentQuestion: Question, roundNumber: number) => {
         const isCorrect = option === currentQuestion.answer;
